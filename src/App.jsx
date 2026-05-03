@@ -129,8 +129,8 @@ export default function App() {
             text="Disorder-related 311 requests per 1,000 crimes. A high value means civic-condition reports are large relative to recorded crime, not necessarily that the area is more dangerous."
           />
           <ExplainerCard
-            title="Disorder Before Later Crime"
-            text={`Blocks are grouped by disorder 311 calls before ${data.meta.splitDate}. The bar shows the average number of crimes on those same blocks after that split date.`}
+            title="311 Before Later Crime"
+            text={`Blocks are grouped by 311 calls before ${data.meta.splitDate}. The comparison shows whether disorder-specific requests behave differently from infrastructure requests.`}
           />
           <ExplainerCard
             title="Transit Catchments"

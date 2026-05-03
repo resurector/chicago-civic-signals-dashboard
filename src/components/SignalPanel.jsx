@@ -20,7 +20,7 @@ export default function SignalPanel({ data, selected }) {
           <div className="selected-grid">
             <Metric label="crimes" value={number(selected.crimes)} />
             <Metric label="disorder 311" value={number(selected.disorder311)} />
-            <Metric label="per 1k crimes" value={number(selected.disorderPer1kCrimes)} />
+            <Metric label="disorder per 1k crimes" value={number(selected.disorderPer1kCrimes)} />
             <Metric label="median income" value={money(selected.medianIncome)} />
           </div>
         ) : (
@@ -31,20 +31,47 @@ export default function SignalPanel({ data, selected }) {
       </section>
 
       <section className="detail-card">
-        <h2>Disorder Before Later Crime</h2>
-        <div className="bin-chart">
-          {data.disorderBins.map((row) => (
-            <div className="bin-row" key={row.bin}>
-              <span className="bin-label">{row.bin}</span>
-              <span className="bar-track">
-                <span
-                  className="bar-fill"
-                  style={{ width: `${Math.min(100, row.avgLateCrimes * 34)}%` }}
-                />
-              </span>
-              <strong>{row.avgLateCrimes.toFixed(2)}</strong>
-            </div>
-          ))}
+        <div className="panel-title-row">
+          <h2>311 Before Later Crime</h2>
+          <div className="mini-legend">
+            <span><i className="legend-dot disorder" />Disorder</span>
+            <span><i className="legend-dot infrastructure" />Infrastructure</span>
+          </div>
+        </div>
+        <p className="panel-note">
+          Blocks are binned by 311 calls before the split date; bars show average crimes after it.
+        </p>
+        <div className="bin-chart compare">
+          {data.disorderBins.map((row, index) => {
+            const infrastructure = data.infrastructureBins?.[index];
+            const maxValue = Math.max(
+              ...data.disorderBins.map((bin) => bin.avgLateCrimes),
+              ...(data.infrastructureBins ?? []).map((bin) => bin.avgLateCrimes)
+            );
+            return (
+              <div className="compare-row" key={row.bin}>
+                <span className="bin-label">{row.bin}</span>
+                <div className="compare-bars">
+                  <span className="bar-track">
+                    <span
+                      className="bar-fill disorder"
+                      style={{ width: `${(row.avgLateCrimes / maxValue) * 100}%` }}
+                    />
+                  </span>
+                  <span className="bar-track">
+                    <span
+                      className="bar-fill infrastructure"
+                      style={{ width: `${((infrastructure?.avgLateCrimes ?? 0) / maxValue) * 100}%` }}
+                    />
+                  </span>
+                </div>
+                <strong>
+                  {row.avgLateCrimes.toFixed(2)}
+                  {infrastructure ? ` / ${infrastructure.avgLateCrimes.toFixed(2)}` : ''}
+                </strong>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -73,7 +100,10 @@ export default function SignalPanel({ data, selected }) {
         <div className="rank-list">
           {data.stationCatchments.slice(0, 9).map((row) => (
             <div className="rank-row" key={`${row.mapId}-${row.name}`}>
-              <span>{row.name}</span>
+              <span>
+                {row.name}
+                {row.lines?.length ? <small className="station-lines"> {row.lines.join(', ')}</small> : null}
+              </span>
               <strong>{row.disorderToCrimeRatio.toFixed(2)}x</strong>
             </div>
           ))}

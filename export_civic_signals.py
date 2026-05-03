@@ -94,6 +94,32 @@ ORDER BY CASE bin WHEN '0' THEN 0 WHEN '1' THEN 1 WHEN '2-3' THEN 2 WHEN '4-7' T
 """
 
 
+INFRASTRUCTURE_BINS_QUERY = """
+WITH date('2026-03-03') AS split_date
+MATCH (b:Block)
+OPTIONAL MATCH (b)<-[:AT_BLOCK]-(s1:ServiceRequest)-[:OF_REQUEST_TYPE]->(:RequestType {category: 'infrastructure'})
+WHERE date(s1.datetime) < split_date
+WITH b, split_date, count(DISTINCT s1) AS infrastructure
+OPTIONAL MATCH (b)<-[:AT_BLOCK]-(c:Crime)
+WHERE date(c.datetime) >= split_date
+WITH b, infrastructure, count(DISTINCT c) AS lateCrimes
+WITH CASE
+       WHEN infrastructure = 0 THEN '0'
+       WHEN infrastructure = 1 THEN '1'
+       WHEN infrastructure <= 3 THEN '2-3'
+       WHEN infrastructure <= 7 THEN '4-7'
+       ELSE '8+'
+     END AS bin,
+     infrastructure, lateCrimes
+RETURN bin,
+       count(*) AS blocks,
+       round(avg(infrastructure), 2) AS avgInfrastructure,
+       round(avg(lateCrimes), 3) AS avgLateCrimes,
+       round(100.0 * sum(CASE WHEN lateCrimes > 0 THEN 1 ELSE 0 END) / count(*), 2) AS pctBlocksWithLateCrime
+ORDER BY CASE bin WHEN '0' THEN 0 WHEN '1' THEN 1 WHEN '2-3' THEN 2 WHEN '4-7' THEN 3 ELSE 4 END
+"""
+
+
 REQUEST_TYPES_QUERY = """
 MATCH (s:ServiceRequest)-[:OF_REQUEST_TYPE]->(rt:RequestType)
 RETURN rt.name AS type, rt.category AS category, count(s) AS count
@@ -125,8 +151,10 @@ WHERE bs IN blocks
 OPTIONAL MATCH (s)-[:OF_REQUEST_TYPE]->(:RequestType {category:'disorder'})
 WITH st, crimes, count(DISTINCT s) AS disorder311
 WHERE crimes >= 50
+OPTIONAL MATCH (st)-[:ON_LINE]->(l:Line)
 RETURN st.mapId AS mapId,
        st.name AS name,
+       collect(DISTINCT l.name) AS lines,
        crimes,
        disorder311,
        round(1.0 * disorder311 / CASE WHEN crimes = 0 THEN 1 ELSE crimes END, 2) AS disorderToCrimeRatio
@@ -188,6 +216,7 @@ def main() -> int:
           },
           "communityAreas": [dict(r) for r in s.run(COMMUNITY_QUERY)],
           "disorderBins": [dict(r) for r in s.run(DISORDER_BINS_QUERY)],
+          "infrastructureBins": [dict(r) for r in s.run(INFRASTRUCTURE_BINS_QUERY)],
           "requestTypes": [dict(r) for r in s.run(REQUEST_TYPES_QUERY)],
           "requestCrimePairs": [dict(r) for r in s.run(REQUEST_CRIME_PAIRS_QUERY)],
           "stationCatchments": [dict(r) for r in s.run(STATIONS_QUERY)],

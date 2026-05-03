@@ -316,13 +316,18 @@ h2 {
 }
 
 .bin-row,
-.rank-row {
+.rank-row,
+.compare-row {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr) 54px;
   gap: 10px;
   align-items: center;
   color: var(--muted);
   font-size: 13px;
+}
+
+.compare-row {
+  grid-template-columns: 42px minmax(0, 1fr) 78px;
 }
 
 .rank-row {
@@ -355,6 +360,68 @@ h2 {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--gold), var(--red));
+}
+
+.bar-fill.disorder {
+  background: linear-gradient(90deg, #c8841f, #c8482b);
+}
+
+.bar-fill.infrastructure {
+  background: linear-gradient(90deg, #8d9aa1, #4f5d64);
+}
+
+.compare-bars {
+  display: grid;
+  gap: 5px;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-note {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mini-legend {
+  display: inline-flex;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.mini-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legend-dot.disorder {
+  background: var(--red);
+}
+
+.legend-dot.infrastructure {
+  background: #65737a;
+}
+
+.station-lines {
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .split-card {
