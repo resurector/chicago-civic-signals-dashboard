@@ -96,6 +96,23 @@ export default function SignalPanel({ data, selected }) {
       </section>
 
       <section className="detail-card">
+        <h2>Most-Linked Pairs</h2>
+        <p className="panel-note">
+          Same block, 311 disorder request first, crime record within 14 days.
+        </p>
+        <div className="pair-list">
+          {data.requestCrimePairs.slice(0, 10).map((row) => (
+            <div className="pair-row" key={`${row.requestType}-${row.crimeType}`}>
+              <span>{row.requestType}</span>
+              <i />
+              <span>{row.crimeType}</span>
+              <strong>{number(row.count)}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="detail-card">
         <h2>Transit Catchments</h2>
         <div className="rank-list">
           {data.stationCatchments.slice(0, 9).map((row) => (

@@ -94,6 +94,13 @@ export default function App() {
               >
                 Disorder ratio
               </button>
+              <button
+                type="button"
+                className={mapMode === 'cluster' ? 'active' : ''}
+                onClick={() => setMapMode('cluster')}
+              >
+                Cluster
+              </button>
             </div>
           </div>
           <CityMap

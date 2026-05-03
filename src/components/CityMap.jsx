@@ -60,8 +60,9 @@ export default function CityMap({ geo, areas, mode, selectedArea, onSelectArea }
     return { paths: features, viewBox: `0 0 ${width} ${height}` };
   }, [geo, areaByNumber]);
 
-  function fillFor(area) {
+function fillFor(area) {
     if (!area) return '#d8d3c8';
+    if (mode === 'cluster') return CLUSTER_COLORS.get(area.cluster) ?? '#9aa2a7';
     if (mode === 'crime') return scales.crime(area.crimes);
     if (mode === 'ratio') return scales.ratio(area.disorderPer1kCrimes);
     return scales.disorder(area.disorder311);
@@ -69,12 +70,27 @@ export default function CityMap({ geo, areas, mode, selectedArea, onSelectArea }
 
   function titleFor(area, name, numberValue) {
     if (!area) return `${name} (CA ${numberValue})`;
-    return [
-      `${area.name} (CA ${area.number})`,
-      `${number(area.crimes)} crimes`,
-      `${number(area.disorder311)} disorder 311`,
-      `${number(area.disorderPer1kCrimes)} disorder per 1,000 crimes`,
-    ].join(' | ');
+    const lines = [`${area.name} (CA ${area.number})`];
+
+    if (mode === 'crime') {
+      lines.push(`${number(area.crimes)} crimes`);
+      lines.push(`${number(area.disorder311)} disorder 311`);
+    } else if (mode === 'ratio') {
+      lines.push(`${number(area.disorderPer1kCrimes)} disorder per 1,000 crimes`);
+      lines.push(`${number(area.crimes)} crimes`);
+    } else if (mode === 'cluster') {
+      lines.push(`crime cluster ${area.cluster}`);
+      lines.push(`${number(area.crimes)} crimes`);
+    } else {
+      lines.push(`${number(area.disorder311)} disorder 311`);
+      lines.push(`${number(area.crimes)} crimes`);
+    }
+
+    if (mode !== 'ratio') {
+      lines.push(`${number(area.disorderPer1kCrimes)} disorder per 1,000 crimes`);
+    }
+
+    return lines.join(' | ');
   }
 
   return (
@@ -112,12 +128,20 @@ export default function CityMap({ geo, areas, mode, selectedArea, onSelectArea }
       </svg>
 
       <div className="map-legend">
-        <span>Lower</span>
-        <span className={`legend-ramp ${mode}`} />
-        <span>Higher</span>
-        <span className="cluster-note">
-          Cluster colors retained in detail panels: {[...CLUSTER_COLORS.keys()].join(', ')}
-        </span>
+        {mode === 'cluster' ? (
+          [...CLUSTER_COLORS.entries()].map(([cluster, color]) => (
+            <span className="cluster-key" key={cluster}>
+              <i style={{ background: color }} />
+              Cluster {cluster}
+            </span>
+          ))
+        ) : (
+          <>
+            <span>Lower</span>
+            <span className={`legend-ramp ${mode}`} />
+            <span>Higher</span>
+          </>
+        )}
       </div>
     </div>
   );

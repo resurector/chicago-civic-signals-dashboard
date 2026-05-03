@@ -276,9 +276,20 @@ h2 {
   background: linear-gradient(90deg, #f7f4f9, #df65b0, #67001f);
 }
 
-.cluster-note {
-  margin-left: auto;
-  color: var(--dim);
+.cluster-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.cluster-key i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 .signal-panel {
@@ -309,7 +320,8 @@ h2 {
 
 .bin-chart,
 .rank-list,
-.block-list {
+.block-list,
+.pair-list {
   display: grid;
   gap: 8px;
   margin-top: 12px;
@@ -447,6 +459,55 @@ h2 {
 .block-row small {
   color: var(--muted);
   font-size: 12px;
+}
+
+.pair-list {
+  gap: 7px;
+}
+
+.pair-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 22px minmax(0, 0.9fr) 54px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid rgba(217, 224, 227, 0.8);
+  border-radius: 7px;
+  background: linear-gradient(180deg, #ffffff, #f6f8f9);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pair-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pair-row i {
+  width: 22px;
+  height: 1px;
+  background: var(--dim);
+  position: relative;
+}
+
+.pair-row i::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-top: 1px solid var(--dim);
+  border-right: 1px solid var(--dim);
+  transform: rotate(45deg);
+}
+
+.pair-row strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .explainer {
