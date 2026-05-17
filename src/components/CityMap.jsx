@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { number } from '../lib/format.js';
 
@@ -10,6 +10,7 @@ const CLUSTER_COLORS = new Map([
 ]);
 
 export default function CityMap({ geo, areas, mode, selectedArea, onSelectArea }) {
+  const [tooltip, setTooltip] = useState(null);
   const areaByNumber = useMemo(() => new Map(areas.map((area) => [area.number, area])), [areas]);
 
   const scales = useMemo(() => {
@@ -60,12 +61,22 @@ export default function CityMap({ geo, areas, mode, selectedArea, onSelectArea }
     return { paths: features, viewBox: `0 0 ${width} ${height}` };
   }, [geo, areaByNumber]);
 
-function fillFor(area) {
+  function fillFor(area) {
     if (!area) return '#d8d3c8';
     if (mode === 'cluster') return CLUSTER_COLORS.get(area.cluster) ?? '#9aa2a7';
     if (mode === 'crime') return scales.crime(area.crimes);
     if (mode === 'ratio') return scales.ratio(area.disorderPer1kCrimes);
     return scales.disorder(area.disorder311);
+  }
+
+  function activeMetric(area) {
+    if (!area) return null;
+    if (mode === 'crime') return { label: 'Crimes', value: number(area.crimes) };
+    if (mode === 'ratio') {
+      return { label: 'Disorder per 1,000 crimes', value: number(area.disorderPer1kCrimes) };
+    }
+    if (mode === 'cluster') return { label: 'Crime cluster', value: area.cluster ?? 'n/a' };
+    return { label: '311 disorder', value: number(area.disorder311) };
   }
 
   function titleFor(area, name, numberValue) {
@@ -94,18 +105,56 @@ function fillFor(area) {
   }
 
   return (
-    <div>
+    <div className="map-wrap">
       <svg className="city-map" viewBox={viewBox} role="img" aria-label="Chicago community area map">
         {paths.map((path) => {
           const isSelected = selectedArea === path.areaNumber;
           const className = ['map-area', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+          const metric = activeMetric(path.area);
           return (
             <path
               key={path.areaNumber}
               d={path.d}
               fill={fillFor(path.area)}
               className={className}
+              tabIndex={0}
+              role="button"
+              aria-label={titleFor(path.area, path.name, path.areaNumber)}
               onClick={() => onSelectArea(isSelected ? null : path.areaNumber)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onSelectArea(isSelected ? null : path.areaNumber);
+                }
+              }}
+              onMouseMove={(event) => {
+                if (!path.area || !metric) return;
+                setTooltip({
+                  x: event.clientX,
+                  y: event.clientY,
+                  name: path.area.name,
+                  number: path.area.number,
+                  metric,
+                  crimes: path.area.crimes,
+                  disorder: path.area.disorder311,
+                  ratio: path.area.disorderPer1kCrimes,
+                });
+              }}
+              onMouseLeave={() => setTooltip(null)}
+              onFocus={() => {
+                if (!path.area || !metric) return;
+                setTooltip({
+                  x: window.innerWidth / 2,
+                  y: 180,
+                  name: path.area.name,
+                  number: path.area.number,
+                  metric,
+                  crimes: path.area.crimes,
+                  disorder: path.area.disorder311,
+                  ratio: path.area.disorderPer1kCrimes,
+                });
+              }}
+              onBlur={() => setTooltip(null)}
             >
               <title>{titleFor(path.area, path.name, path.areaNumber)}</title>
             </path>
@@ -143,6 +192,24 @@ function fillFor(area) {
           </>
         )}
       </div>
+
+      {tooltip && (
+        <div
+          className="map-tooltip"
+          style={{ left: tooltip.x + 14, top: tooltip.y + 14 }}
+        >
+          <strong>{tooltip.name}</strong>
+          <span>CA {tooltip.number}</span>
+          <div className="tooltip-metric">
+            <em>{tooltip.metric.label}</em>
+            <b>{tooltip.metric.value}</b>
+          </div>
+          <small>
+            {number(tooltip.crimes)} crimes / {number(tooltip.disorder)} disorder 311 /{' '}
+            {number(tooltip.ratio)} per 1k crimes
+          </small>
+        </div>
+      )}
     </div>
   );
 }

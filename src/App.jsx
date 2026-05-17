@@ -70,7 +70,14 @@ export default function App() {
           <div className="section-head">
             <div>
               <h2>City Map</h2>
-              <p>{selected ? `${selected.name}, CA ${selected.number}` : 'Select a community area'}</p>
+              <p className="selected-line">
+                <span>{selected ? `${selected.name}, CA ${selected.number}` : 'Select a community area'}</span>
+                {selected && (
+                  <button type="button" className="clear-selection" onClick={() => setSelectedArea(null)}>
+                    Clear
+                  </button>
+                )}
+              </p>
             </div>
             <div className="segmented">
               <button
@@ -110,6 +117,9 @@ export default function App() {
             selectedArea={selectedArea}
             onSelectArea={setSelectedArea}
           />
+          <div className="map-footer">
+            Data window: {dateLabel(data.meta.earliest)} to {dateLabel(data.meta.latest)}
+          </div>
         </div>
 
         <SignalPanel data={data} selected={selected} />
